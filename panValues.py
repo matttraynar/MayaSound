@@ -112,24 +112,27 @@ def panSound():
   fps = fpsFor(unit)
   lengthOfFrame = 1000.0/fps
 
-  soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking on concrete sound effect.mp3")
+  soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking.mp3")
   newClip = AudioSegment.empty()
   oldSplit = 0
   currentSplit = lengthOfFrame
 
   print(len(soundClip))
+  print(lastKey * lengthOfFrame)
 
-  if len(soundClip) > ((lastKey)*lengthOfFrame):
+  if (len(soundClip) < (lastKey*lengthOfFrame)):
       print("sound > time")
+      
       for frame in range (int(1),int(lastKey + 1)):
         cmds.currentTime(frame,edit=True)
         panValue = calculatePan("cameraShape1","pCube1")
 
         if (currentSplit >= len(soundClip)):
-          newClip += soundClip[oldSplit:len(soundClip)].pan(panValue)
+            print("reset")
+            newClip += soundClip[oldSplit:len(soundClip)].pan(panValue)
 
-          currentSplit = len(soundClip) - oldSplit
-          oldSplit = 0
+            currentSplit = len(soundClip) - oldSplit
+            oldSplit = 0        
 
         newClip += soundClip[oldSplit:currentSplit].pan(panValue)
 
@@ -138,19 +141,18 @@ def panSound():
       
   else:
     print("time > sound")
+    
     for frame in range (int(firstKey),int(lastKey + 1)):
       cmds.currentTime(float(frame),edit=True)
       panValue = calculatePan("cameraShape1","pCube1")
 
       newClip += soundClip[oldSplit:currentSplit].pan(panValue)
 
-      test = soundClip[oldSplit:currentSplit]
-
       oldSplit = currentSplit
 
       currentSplit += lengthOfFrame
 
-    newClip.export("pannedWalk.wav",format="wav")
+  newClip.export("pannedWalk.wav",format="wav")
 
 
 panSound()

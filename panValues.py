@@ -1,4 +1,5 @@
 import sys 
+import platform
 import types
 import maya.cmds as cmds
 import vec3
@@ -112,7 +113,11 @@ def panSound():
   fps = fpsFor(unit)
   lengthOfFrame = 1000.0/fps
 
-  soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking on concrete sound effect.mp3")
+  if(platform.system() == "Windows"):
+    soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking on concrete sound effect.mp3")
+  elif(platform.system() == "Linux"):
+    soundClip = AudioSegment.from_mp3("/home/i7626944/maya/scripts/Walking.mp3")
+
   newClip = AudioSegment.empty()
   oldSplit = 0
   currentSplit = lengthOfFrame
@@ -121,15 +126,10 @@ def panSound():
 
   if len(soundClip) > ((lastKey)*lengthOfFrame):
       print("sound > time")
-      for frame in range (int(1),int(lastKey + 1)):
+      for frame in range (1,int(lastKey + 1)):
         cmds.currentTime(frame,edit=True)
         panValue = calculatePan("cameraShape1","pCube1")
 
-        if (currentSplit >= len(soundClip)):
-          newClip += soundClip[oldSplit:len(soundClip)].pan(panValue)
-
-          currentSplit = len(soundClip) - oldSplit
-          oldSplit = 0
 
         newClip += soundClip[oldSplit:currentSplit].pan(panValue)
 
@@ -138,19 +138,28 @@ def panSound():
       
   else:
     print("time > sound")
-    for frame in range (int(firstKey),int(lastKey + 1)):
-      cmds.currentTime(float(frame),edit=True)
+    for frame in range (1,int(lastKey + 1)):
+      cmds.currentTime(frame,edit=True)
       panValue = calculatePan("cameraShape1","pCube1")
 
-      newClip += soundClip[oldSplit:currentSplit].pan(panValue)
+      if (currentSplit >= len(soundClip)):
+        newClip += soundClip[oldSplit:len(soundClip)].pan(panValue)
 
-      test = soundClip[oldSplit:currentSplit]
+        currentSplit = len(soundClip) - oldSplit
+        oldSplit = 0
+
+      newClip += soundClip[oldSplit:currentSplit].pan(panValue)
 
       oldSplit = currentSplit
 
       currentSplit += lengthOfFrame
 
+  if(platform.system() == "Windows"):
     newClip.export("pannedWalk.wav",format="wav")
+  elif(platform.system() == "Linux"):
+    newClip.export("/home/i7626944/maya/scripts/pannedWalk.wav",format="wav")
+
+  print("Sound file exported")
 
 
 panSound()

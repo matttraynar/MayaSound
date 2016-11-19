@@ -1,4 +1,5 @@
 import sys 
+import platform
 import types
 import maya.cmds as cmds
 import vec3
@@ -40,7 +41,7 @@ def reload_package(root_module):
   # load each of the modules again; 
   # make old modules share state with new modules
   for key in loaded_package_modules:
-      print 'loading %s' % key
+      print('loading %s' % key)
       newmodule = __import__(key)
       oldmodule = loaded_package_modules[key]
       oldmodule.__dict__.clear()
@@ -111,48 +112,123 @@ def panSound():
 
   fps = fpsFor(unit)
   lengthOfFrame = 1000.0/fps
+  '''
+  if(platform.system() == "Windows"):
+    soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking.mp3")
+  elif(platform.system() == "Linux"):
+    soundClip = AudioSegment.from_mp3("/home/i7626944/maya/scripts/Walking.mp3")
+  '''
 
-  soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking.mp3")
+  soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/A3.mp3")
+
   newClip = AudioSegment.empty()
   oldSplit = 0
   currentSplit = lengthOfFrame
+  lastVolume = 0
 
-  print(len(soundClip))
-  print(lastKey * lengthOfFrame)
+  tmpClip = AudioSegment.empty()
+  tmpClip2 = AudioSegment.empty()
 
   if (len(soundClip) < (lastKey*lengthOfFrame)):
-      print("sound > time")
+    print("sound > time")
       
-      for frame in range (int(1),int(lastKey + 1)):
-        cmds.currentTime(frame,edit=True)
-        panValue = calculatePan("cameraShape1","pCube1")
+    for frame in range (int(1),int(lastKey + 1)):
+      cmds.currentTime(frame,edit=True)
+      panValue = calculatePan("cameraShape1","pCube1")
 
-        if (currentSplit >= len(soundClip)):
-            print("reset")
-            newClip += soundClip[oldSplit:len(soundClip)].pan(panValue)
+      dist = getDistance("cameraShape1","pCube1")
 
-            currentSplit = len(soundClip) - oldSplit
-            oldSplit = 0        
+      if (currentSplit >= len(soundClip)):
+          tmpClip = soundClip[oldSplit:len(soundClip)].pan(panValue)
+          volume = calculateVolumeChange(dist,soundClip,tmpClip)
+      
 
-        newClip += soundClip[oldSplit:currentSplit].pan(panValue)
+          tmpClip2 = tmpClip + volume
+        
+          newClip += tmpClip2
+          tmpClip2 = AudioSegment.empty()
 
-        oldSplit = currentSplit
-        currentSplit += lengthOfFrame
+          currentSplit = len(soundClip) - oldSplit
+          oldSplit = 0        
+
+      tmpClip += soundClip[oldSplit:currentSplit].pan(panValue)
+      volume = calculateVolumeChange(dist,soundClip,tmpClip)
+
+      tmpClip2 = tmpClip + volume
+      newClip += tmpClip2
+
+      lastVolume = volume
+      tmpClip = AudioSegment.empty()
+      tmpClip2 = AudioSegment.empty()
+      oldSplit = currentSplit
+      currentSplit += lengthOfFrame
       
   else:
     print("time > sound")
     
-    for frame in range (int(firstKey),int(lastKey + 1)):
-      cmds.currentTime(float(frame),edit=True)
+    for frame in range (1,int(lastKey + 1)):
+      cmds.currentTime(frame,edit=True)
       panValue = calculatePan("cameraShape1","pCube1")
 
-      newClip += soundClip[oldSplit:currentSplit].pan(panValue)
+      dist = getDistance("cameraShape1","pCube1")
 
+      tmpClip += soundClip[oldSplit:currentSplit].pan(panValue)
+
+      volume = calculateVolumeChange(dist,soundClip,tmpClip)
+
+      tmpClip2 = tmpClip #+ volume
+
+      newClip += tmpClip2
+
+      tmpClip = AudioSegment.empty()
+      tmpClip2 = AudioSegment.empty()
       oldSplit = currentSplit
-
       currentSplit += lengthOfFrame
 
-  newClip.export("pannedWalk.wav",format="wav")
+  if(platform.system() == "Windows"):
+    newClip.export("E:/mattt/Documents/maya/scripts/WalkWithPan.wav",format="wav")
+  elif(platform.system() == "Linux"):
+    newClip.export("/home/i7626944/maya/scripts/pannedWalk.wav",format="wav")
+
+  print("Sound file exported")
+
+def getDistance(camName, objName):
+  mayaCamPos = cmds.camera(camName,q=True,p=True)
+  mayaObjPos = cmds.xform(objName,q=True,t=True)
+
+  camPosition = vec3.vec3(mayaCamPos[0],mayaCamPos[1],mayaCamPos[2])
+  objPosition = vec3.vec3(mayaObjPos[0],mayaObjPos[1],mayaObjPos[2])
+
+  distance = vec3.dist(camPosition, objPosition)
+
+  return distance
+
+def calculateVolumeChange(distance,soundClip,adjustClip):
+  
+  loudness = soundClip.max_dBFS
+  adLoudness = adjustClip.max_dBFS
+
+  if(distance < 1):
+    distance = 1
+    
+  newLoudness = pow((10/distance),2) * loudness
+
+  if(loudness < 0):
+    loudnessChange = newLoudness - loudness
+    newLoudness = loudness - loudnessChange
+
+  returnVolume = newLoudness - loudness
+
+  if(returnVolume > 7000):
+    returnVolume = 5500
+
+  testClip = adjustClip + returnVolume
+
+  if(testClip.max_dBFS > adLoudness):
+    returnVolume = 0
+
+  return returnVolume
 
 
 panSound()
+

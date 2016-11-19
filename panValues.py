@@ -176,7 +176,7 @@ def panSound():
 
       volume = calculateVolumeChange(dist,soundClip,tmpClip)
 
-      tmpClip2 = tmpClip #+ volume
+      tmpClip2 = tmpClip + volume
 
       newClip += tmpClip2
 
@@ -206,7 +206,7 @@ def getDistance(camName, objName):
 def calculateVolumeChange(distance,soundClip,adjustClip):
   
   loudness = soundClip.max_dBFS
-  adLoudness = adjustClip.max_dBFS
+  adLoudness = soundClip.max_dBFS
 
   if(distance < 1):
     distance = 1
@@ -230,5 +230,7 @@ def calculateVolumeChange(distance,soundClip,adjustClip):
   return returnVolume
 
 
-panSound()
+#panSound()
+
+
 

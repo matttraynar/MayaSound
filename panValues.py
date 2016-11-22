@@ -112,14 +112,14 @@ def panSound():
 
   fps = fpsFor(unit)
   lengthOfFrame = 1000.0/fps
-  '''
+  
   if(platform.system() == "Windows"):
     soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/Walking.mp3")
   elif(platform.system() == "Linux"):
-    soundClip = AudioSegment.from_mp3("/home/i7626944/maya/scripts/Walking.mp3")
-  '''
+    soundClip = AudioSegment.from_mp3("/home/i7626944/Documents/Innovations/MayaSound/Walking.mp3")
+  
 
-  soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/A3.mp3")
+  #soundClip = AudioSegment.from_mp3("E:/mattt/Documents/maya/scripts/A3.mp3")
 
   newClip = AudioSegment.empty()
   oldSplit = 0
@@ -188,7 +188,7 @@ def panSound():
   if(platform.system() == "Windows"):
     newClip.export("E:/mattt/Documents/maya/scripts/WalkWithPan.wav",format="wav")
   elif(platform.system() == "Linux"):
-    newClip.export("/home/i7626944/maya/scripts/pannedWalk.wav",format="wav")
+    newClip.export("/home/i7626944/Documents/Innovations/MayaSound/pannedWalk.wav",format="wav")
 
   print("Sound file exported")
 
